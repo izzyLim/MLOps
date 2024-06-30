@@ -1,11 +1,14 @@
 version: "3.7"
 
 networks:
-  mlflow:
+  mlops:
+    driver: bridge
 
 volumes:
   postgres_data:
   minio_data:
+  grafana-data:
+  prometheus-data:
 
 services:
   minio:
@@ -15,10 +18,11 @@ services:
       - 9000:9000
       - 9001:9001
     networks:
-      - mlflow
+      - mlops
     volumes:
       - minio_data:/data
     environment:
+      MINIO_PROMETHEUS_AUTH_TYPE: public
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address :9001
@@ -29,7 +33,7 @@ services:
     depends_on:
       - minio
     networks:
-      - mlflow
+      - mlops
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set minio http://minio:9000 minioadmin minioadmin;
@@ -43,7 +47,7 @@ services:
     ports:
       - 5434:5434
     networks:
-      - mlflow
+      - mlops
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -66,7 +70,7 @@ services:
     ports:
       - 5001:5000
     networks:
-      - mlflow
+      - mlops
     environment:
       - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
       - AWS_ACCESS_KEY_ID=minioadmin
@@ -80,3 +84,74 @@ services:
         --backend-store-uri postgresql+psycopg2://postgres:postgres@postgresql:5434/mlflow
         --serve-artifacts
         --artifacts-destination s3://mlflow/
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - mlops
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus:/etc/prometheus
+    command:
+      - '--web.enable-lifecycle'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      - minio
+      - create_minio_bucket
+      - postgresql
+      - mlflow
+    networks:
+      - mlops
+
+  node_exporter:
+    image: prom/node-exporter
+    container_name: node-node_exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - mlops
+
+  postgre_exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: posgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgresql:5434/mlflow?sslmode=disable
+    depends_on:
+      - prometheus
+      - postgresql
+    networks:
+      - mlops
