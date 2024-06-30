@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/yeji/Projects/MLflow_project/mlruns/0/cbe3cf5184dc48aa974dae3fc802e881/artifacts
+end_time: 1719667647584
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: cbe3cf5184dc48aa974dae3fc802e881
+run_name: charming-mule-453
+run_uuid: cbe3cf5184dc48aa974dae3fc802e881
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1719667646637
+status: 3
+tags: []
+user_id: yeji

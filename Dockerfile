@@ -1,19 +1,3 @@
-FROM arm64/python:3.9-slim
+FROM python:3.9-slim-buster
 
-RUN apt-get update && apt-get install -y \
-    git \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install -U pip &&\
-    pip install mlflow psycopg2-binary boto3
-
-RUN cd /tmp && \
-    wget https://dl.min.io/client/mc/release/linux-arm64/mc && \
-    chmod +x mc && \
-    mv mc /usr/bin/mc
-
-# Install python packages
-COPY requirements.txt /tmp
-
-RUN pip install -r /tmp/requirements.txt
+RUN pip install boto3 psycopg2-binary mlflow
