@@ -155,3 +155,17 @@ services:
       - postgresql
     networks:
       - mlops
+
+  api-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    container_name: fastapi-monitoring
+    volumes:
+      - .:/code
+    ports:
+      - "8080:8080"
+    environment:
+      - ENABLE_METRICS=true
+    networks:
+      - mlops

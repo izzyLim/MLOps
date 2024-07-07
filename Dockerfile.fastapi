@@ -1,0 +1,14 @@
+FROM python:3.11
+
+#COPY requirements.txt requirements.txt 
+#RUN pip install -r requirements.txt
+RUN pip install numpy pandas pydantic scikit-learn
+RUN pip install fastapi uvicorn prometheus-fastapi-instrumentator
+RUN pip install joblib 
+
+WORKDIR /MLOps_project
+COPY . /MLOps_project
+
+EXPOSE 8080
+
+CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8080"]

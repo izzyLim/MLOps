@@ -34,3 +34,8 @@ scrape_configs:
     scheme: 'http'
     static_configs:
       - targets: ['minio:9000']
+
+  - job_name: fastapi
+    honor_labels: true
+    static_configs:
+    - targets: ['api-web:8080']  # metrics from model
