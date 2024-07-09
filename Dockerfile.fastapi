@@ -2,9 +2,11 @@ FROM python:3.11
 
 #COPY requirements.txt requirements.txt 
 #RUN pip install -r requirements.txt
-RUN pip install numpy pandas pydantic scikit-learn
+RUN pip install pandas pydantic scikit-learn
 RUN pip install fastapi uvicorn prometheus-fastapi-instrumentator
 RUN pip install joblib 
+RUN pip install transformers==4.34.0
+RUN pip install torch
 
 WORKDIR /MLOps_project
 COPY . /MLOps_project

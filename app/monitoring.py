@@ -85,3 +85,31 @@ buckets = (*np.arange(0, 10.5, 0.5).tolist(), float("inf"))
 instrumentator.add(
     regression_model_output(metric_namespace=NAMESPACE, metric_subsystem=SUBSYSTEM, buckets=buckets)
 )
+
+def model_metric_accuracy(
+    metric_name: str = "model_metric_accuracy",
+    metric_doc: str = "Accuracy value of sentiment model",
+    metric_namespace: str = "",
+    metric_subsystem: str = "",
+    buckets=(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, float("inf")),
+) -> Callable[[Info], None]:
+    METRIC = Histogram(
+        metric_name,
+        metric_doc,
+        buckets=buckets,
+        namespace=metric_namespace,
+        subsystem=metric_subsystem,
+    )
+
+    def instrumentation(info: Info) -> None:
+        if info.modified_handler == "/sa_predict":
+            accuracy = info.response.headers.get("X-model-accuracy")
+            if accuracy:
+                METRIC.observe(float(accuracy))
+
+    return instrumentation
+
+buckets = (*np.arange(0, 1.1, 0.1).tolist(), float("inf"))
+instrumentator.add(
+    model_metric_accuracy(metric_namespace=NAMESPACE, metric_subsystem=SUBSYSTEM, buckets=buckets)
+)
