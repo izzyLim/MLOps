@@ -1,2 +1,5 @@
 mlruns/*
 tt.ipynb
+
+__pycache__/
+*.pyc

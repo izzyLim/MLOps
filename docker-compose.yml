@@ -60,7 +60,9 @@ services:
     command: -p 5434
 
   mlflow:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile.mlflow
     image: mlflow
     container_name: mlflow
     depends_on:
